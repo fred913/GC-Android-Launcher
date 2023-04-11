@@ -1,4 +1,4 @@
-package yuuki.yuukips;
+package com.ft2genshinpub;
 
 import static de.robv.android.xposed.XposedHelpers.*;
 
@@ -13,8 +13,7 @@ import java.util.List;
 
 public class TrustMeAlready {
 
-  private static final String SSL_CLASS_NAME =
-    "com.android.org.conscrypt.TrustManagerImpl";
+  private static final String SSL_CLASS_NAME = "com.android.org.conscrypt.TrustManagerImpl";
   private static final String SSL_METHOD_NAME = "checkTrustedRecursive";
   private static final Class<?> SSL_RETURN_TYPE = List.class;
   private static final Class<?> SSL_RETURN_PARAM_TYPE = X509Certificate.class;
@@ -29,20 +28,18 @@ public class TrustMeAlready {
       List<Object> params = new ArrayList<>();
       params.addAll(Arrays.asList(method.getParameterTypes()));
       params.add(
-        new XC_MethodReplacement() {
-          @Override
-          protected Object replaceHookedMethod(MethodHookParam param)
-            throws Throwable {
-            return new ArrayList<X509Certificate>();
-          }
-        }
-      );
+          new XC_MethodReplacement() {
+            @Override
+            protected Object replaceHookedMethod(MethodHookParam param)
+                throws Throwable {
+              return new ArrayList<X509Certificate>();
+            }
+          });
       findAndHookMethod(
-        SSL_CLASS_NAME,
-        null,
-        SSL_METHOD_NAME,
-        params.toArray()
-      );
+          SSL_CLASS_NAME,
+          null,
+          SSL_METHOD_NAME,
+          params.toArray());
     }
   }
 

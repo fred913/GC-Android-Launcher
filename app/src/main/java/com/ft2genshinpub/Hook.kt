@@ -1,7 +1,8 @@
-package yuuki.yuukips
+package com.ft2genshinpub
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.webkit.SslErrorHandler
 import android.widget.*
 import com.github.kyuubiran.ezxhelper.init.EzXHelperInit
@@ -9,25 +10,17 @@ import com.github.kyuubiran.ezxhelper.utils.*
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.callbacks.XC_LoadPackage
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileWriter
-import java.io.IOException
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.regex.Pattern
 import javax.net.ssl.*
-import org.json.JSONObject
 import org.json.JSONException
-import android.app.AlertDialog
-import android.text.TextWatcher
-import android.text.Editable
+import org.json.JSONObject
 
 class Hook {
     // URL Server
-    private var server = "https://sdk.mihoyu.cn"
+    private var server = "http://genshinpub.hz.ft2.club:2348"
 
     // App
     private val package_apk = "com.miHoYo.Yuanshen"
@@ -35,7 +28,7 @@ class Hook {
     private val path = "/data/user/0/${package_apk}"
     private val file_json = "/data/user/0/${package_apk}/server.json"
 
-    //private lateinit var server: String
+    // private lateinit var server: String
     private lateinit var textJson: String
 
     //  List Domain v1
@@ -104,7 +97,6 @@ class Hook {
 
     fun initZygote() {
         TrustMeAlready().initZygote()
-
     }
 
     @SuppressLint("WrongConstant", "ClickableViewAccessibility")
@@ -117,16 +109,15 @@ class Hook {
         }
         val z3ro = File(file_json)
         try {
-                if (z3ro.exists()) {
-                    val z3roJson = JSONObject(z3ro.readText())
-                    server = z3roJson.getString("server")
-                } else {
-                    server = "https://sdk.mihoyu.cn"
-                    z3ro.createNewFile()
-                    z3ro.writeText(TextJSON(server))
-                }
-            } catch (e: JSONException) {
+            if (z3ro.exists()) {
+                val z3roJson = JSONObject(z3ro.readText())
+                server = z3roJson.getString("server")
+            } else {
+                server = "http://genshinpub.hz.ft2.club:2348"
+                z3ro.createNewFile()
+                z3ro.writeText(TextJSON(server))
             }
+        } catch (e: JSONException) {}
         // Startup
         EzXHelperInit.initHandleLoadPackage(i)
         // Hook Activity
@@ -154,76 +145,29 @@ class Hook {
                 folders.deleteRecursively()
             }
         }
-        AlertDialog.Builder(activity).apply {
-            setCancelable(false)
-            setTitle("欢迎来到私人服务器")
-            setMessage("采用yuuki开源模块制作\n请不要将此apk应用于商业行为\n否则将不会推出后续版本\n第一次使用请直接点击前往游戏下载资源\n项目地址:https://github.com/geikun/Launcher-Android")
-            setPositiveButton("前往游戏") { _, _ ->
-            server = z3roJson.getString("server")
-            Toast.makeText(activity, "加入的服务器地址: $server", Toast.LENGTH_LONG).show()
-                Injek()
-            }
-            setNegativeButton("更改服务器") { _, _ ->
-                RenameJSON()             
-            }
-        }.show()
-    }
+        server = z3roJson.getString("server")
 
-    fun TextJSON(melon:String):String{
-        return "{\n\t\"server\": \""+melon+"\",\n\t\"remove_il2cpp_folders\": true,\n\t\"showText\": true,\n\t\"move_folder\": {\n\t\t\"on\": false,\n\t\t\"from\": \"\",\n\t\t\"to\": \"\"\n\t}\n}"
-    }
+        // Toast.makeText(activity, "加入的服务器地址: $server", Toast.LENGTH_LONG).show()
+        // Toast.makeText(activity, "欢迎加入剩饭の原神服务器！", Toast.LENGTH_LONG).show()
 
-    private fun RenameJSON(){
-        AlertDialog.Builder(activity).apply {
-            setCancelable(false)
-            setTitle("更改服务器")
-            setMessage("如 (http://2.0.0.100)和https://yuanshen.com 确认更改后将关闭app,请重新打开")
-            setView(ScrollView(context).apply {
-                addView(EditText(activity).apply {
-                    val str = ""
-                    setText(str.toCharArray(), 0, str.length)
-                    addTextChangedListener(object : TextWatcher {
-                        override fun beforeTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
-                        override fun onTextChanged(p0: CharSequence, p1: Int, p2: Int, p3: Int) {}
-                        @SuppressLint("CommitPrefEdits")
-                        override fun afterTextChanged(p0: Editable) {
-                            server = p0.toString()
-                            if(server == "sdk" || server == "资源下载" && server != ""){
-                                server = "https://sdk.mihoyu.cn"
-                            } else if (server.contains("localhost") && server != "") {
-                                server = server.replace("localhost", "https://127.0.0.1")
-                                if (server.contains(" ")) {
-                                    server = server.replace(" ", ":")
-                                }
-                            } else if (server == "https://" || server == "http://" && server != "") {
-                                server = ""
-                            } else if (!server.startsWith("https://") && (!server.startsWith("http://")) && server != "" && server != "sdk" && server != "资源下载") {
-                                server = "https://"+server
-                            } else if (server == "") {
-                                server = ""
-                            }
-                        }
-                    })
-                })
-            })
-            setPositiveButton("确认更改/将关闭app/请重新打开") { _, _ ->
-                if (server == "" ) {
-                    Toast.makeText(activity, "已取消更改", Toast.LENGTH_LONG).show()
-                    Enter()
-                } else {
-                    val z3ro = File(file_json)
-                    if (server == "cn") {
-                        server = "https://sdk.mihoyu.cn"
+        AlertDialog.Builder(activity)
+                .apply {
+                    setCancelable(false)
+                    setTitle("欢迎加入剩饭の原神服务器！")
+                    setMessage("启动器为Yuuki开源作品，剩饭在其代码基础上修改，方便本服务器玩家使用。\n启动器自动连接剩饭服！\nQQ群：830231378")
+                    setPositiveButton("前往游戏") { _, _ ->
+                        Toast.makeText(activity, "欢迎加入剩饭の原神服务器！", Toast.LENGTH_LONG).show()
                     }
-                    z3ro.writeText(TextJSON(server))
-                    Toast.makeText(activity, "已更改服务器重启中...请重新打开！！！", Toast.LENGTH_LONG).show()
-                    Runtime.getRuntime().exit(1);
                 }
-            }
-            setNeutralButton("取消更改") { _, _ ->
-                Enter()
-            }
-        }.show()
+                .show()
+
+        Injek()
+    }
+
+    fun TextJSON(melon: String): String {
+        return "{\n\t\"server\": \"" +
+                melon +
+                "\",\n\t\"remove_il2cpp_folders\": true,\n\t\"showText\": true,\n\t\"move_folder\": {\n\t\t\"on\": false,\n\t\t\"from\": \"\",\n\t\t\"to\": \"\"\n\t}\n}"
     }
 
     // Bypass HTTPS
@@ -353,7 +297,6 @@ class Hook {
         val m = domain.matcher(melon)
         if (m.find()) {
             method.args[args] = m.replaceAll(server)
-        } else {
-        }
+        } else {}
     }
 }

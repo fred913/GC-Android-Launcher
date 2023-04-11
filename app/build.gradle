@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    namespace 'yuuki.yuukips'
+    namespace 'com.ft2genshinpub'
     
     compileSdk 32
 
     defaultConfig {
-        applicationId "yuuki.yuukips"
+        applicationId "com.ft2genshinpub"
         minSdk = 28
         targetSdk = 32
         versionCode = 5

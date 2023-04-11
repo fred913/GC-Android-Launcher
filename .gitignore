@@ -12,3 +12,4 @@ local.properties
 apk
 *.apk
 app/bin
+/tool

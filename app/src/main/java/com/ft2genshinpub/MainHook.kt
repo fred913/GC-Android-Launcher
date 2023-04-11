@@ -1,4 +1,4 @@
-package yuuki.yuukips
+package com.ft2genshinpub
 
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
