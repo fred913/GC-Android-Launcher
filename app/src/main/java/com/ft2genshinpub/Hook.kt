@@ -3,6 +3,8 @@ package com.ft2genshinpub
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.text.Editable
+import android.text.TextWatcher
 import android.webkit.SslErrorHandler
 import android.widget.*
 import com.github.kyuubiran.ezxhelper.init.EzXHelperInit
@@ -20,10 +22,11 @@ import org.json.JSONObject
 
 class Hook {
     // URL Server
-    private var server = "http://genshinpub.hz.ft2.club:2348"
+    private var server = "https://sdk.mihoyu.cn"
 
     // App
     private val package_apk = "com.miHoYo.Yuanshen"
+    // private val package_apk = "com.xlpmy.dev"
     private val injek_activity = "com.miHoYo.GetMobileInfo.MainActivity"
     private val path = "/data/user/0/${package_apk}"
     private val file_json = "/data/user/0/${package_apk}/server.json"
@@ -113,7 +116,7 @@ class Hook {
                 val z3roJson = JSONObject(z3ro.readText())
                 server = z3roJson.getString("server")
             } else {
-                server = "http://genshinpub.hz.ft2.club:2348"
+                server = "https://sdk.mihoyu.cn"
                 z3ro.createNewFile()
                 z3ro.writeText(TextJSON(server))
             }
@@ -145,29 +148,121 @@ class Hook {
                 folders.deleteRecursively()
             }
         }
-        server = z3roJson.getString("server")
-
-        // Toast.makeText(activity, "加入的服务器地址: $server", Toast.LENGTH_LONG).show()
-        // Toast.makeText(activity, "欢迎加入剩饭の原神服务器！", Toast.LENGTH_LONG).show()
-
         AlertDialog.Builder(activity)
                 .apply {
                     setCancelable(false)
-                    setTitle("欢迎加入剩饭の原神服务器！")
-                    setMessage("启动器为Yuuki开源作品，剩饭在其代码基础上修改，方便本服务器玩家使用。\n启动器自动连接剩饭服！\nQQ群：830231378")
+                    setTitle("欢迎来到私人服务器")
+                    setMessage(
+                            "采用开源模块制作\n请不要将此apk应用于商业行为\n否则将不会推出后续版本\n第一次使用请直接点击前往游戏下载资源\n使用教程以及更多版本下载:https://mihoyu.cn\n可前往地址下载最新版和历史版本"
+                    )
                     setPositiveButton("前往游戏") { _, _ ->
-                        Toast.makeText(activity, "欢迎加入剩饭の原神服务器！", Toast.LENGTH_LONG).show()
+                        server = z3roJson.getString("server")
+                        Toast.makeText(activity, "加入的服务器地址: $server", Toast.LENGTH_LONG).show()
+                        Injek()
                     }
+                    setNegativeButton("更改服务器") { _, _ -> RenameJSON() }
                 }
                 .show()
-
-        Injek()
     }
 
     fun TextJSON(melon: String): String {
         return "{\n\t\"server\": \"" +
                 melon +
                 "\",\n\t\"remove_il2cpp_folders\": true,\n\t\"showText\": true,\n\t\"move_folder\": {\n\t\t\"on\": false,\n\t\t\"from\": \"\",\n\t\t\"to\": \"\"\n\t}\n}"
+    }
+
+    private fun RenameJSON() {
+        AlertDialog.Builder(activity)
+                .apply {
+                    setCancelable(false)
+                    setTitle("更改服务器")
+                    setMessage("如 (http://2.0.0.100)和https://yuanshen.com 确认更改后将关闭app,请重新打开")
+                    setView(
+                            ScrollView(context).apply {
+                                addView(
+                                        EditText(activity).apply {
+                                            val str = ""
+                                            setText(str.toCharArray(), 0, str.length)
+                                            addTextChangedListener(
+                                                    object : TextWatcher {
+                                                        override fun beforeTextChanged(
+                                                                p0: CharSequence,
+                                                                p1: Int,
+                                                                p2: Int,
+                                                                p3: Int
+                                                        ) {}
+                                                        override fun onTextChanged(
+                                                                p0: CharSequence,
+                                                                p1: Int,
+                                                                p2: Int,
+                                                                p3: Int
+                                                        ) {}
+                                                        @SuppressLint("CommitPrefEdits")
+                                                        override fun afterTextChanged(
+                                                                p0: Editable
+                                                        ) {
+                                                            server = p0.toString()
+                                                            if (server == "sdk") {
+                                                                server = "https://sdk.mihoyu.cn"
+                                                            } else if (server == "login") {
+                                                                server = "https://login.mihoyu.cn"
+                                                            } else if (server.contains(
+                                                                            "localhost"
+                                                                    ) && server != ""
+                                                            ) {
+                                                                server =
+                                                                        server.replace(
+                                                                                "localhost",
+                                                                                "https://127.0.0.1"
+                                                                        )
+                                                                if (server.contains(" ")) {
+                                                                    server =
+                                                                            server.replace(" ", ":")
+                                                                }
+                                                            } else if (server == "https://" ||
+                                                                            server == "http://" &&
+                                                                                    server != ""
+                                                            ) {
+                                                                server = "" // 不敢动
+                                                            } else if (!server.startsWith(
+                                                                            "https://"
+                                                                    ) &&
+                                                                            (!server.startsWith(
+                                                                                    "http://"
+                                                                            )) &&
+                                                                            server != "" &&
+                                                                            server != "sdk" &&
+                                                                            server != "login"
+                                                            ) {
+                                                                server = "https://" + server
+                                                            } else if (server == "") {
+                                                                server = ""
+                                                            }
+                                                        }
+                                                    }
+                                            )
+                                        }
+                                )
+                            }
+                    )
+                    setPositiveButton("确认更改/将关闭app/请重新打开") { _, _ ->
+                        if (server == "") {
+                            Toast.makeText(activity, "已取消更改", Toast.LENGTH_LONG).show()
+                            Enter()
+                        } else {
+                            val z3ro = File(file_json)
+                            if (server == "cn") {
+                                server = "https://sdk.mihoyu.cn"
+                            }
+                            z3ro.writeText(TextJSON(server))
+                            Toast.makeText(activity, "已更改服务器重启中...请重新打开！！！", Toast.LENGTH_LONG)
+                                    .show()
+                            Runtime.getRuntime().exit(1)
+                        }
+                    }
+                    setNeutralButton("取消更改") { _, _ -> Enter() }
+                }
+                .show()
     }
 
     // Bypass HTTPS
